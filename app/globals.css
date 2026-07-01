@@ -20,7 +20,29 @@
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
+  background: #1A1D20;
+  color: #ffffff;
   font-family: Arial, Helvetica, sans-serif;
+}
+
+/* Leaflet popup personalizado */
+.modulo-popup .leaflet-popup-content-wrapper {
+  background: #1A1D20 !important;
+  border: 1px solid #ED145B55;
+  border-radius: 8px !important;
+  box-shadow: 0 0 20px #ED145B33 !important;
+  padding: 0 !important;
+}
+
+.modulo-popup .leaflet-popup-content {
+  margin: 12px 14px !important;
+  color: #fff;
+}
+
+.modulo-popup .leaflet-popup-tip {
+  background: #1A1D20 !important;
+}
+
+.leaflet-container {
+  background: #111315;
 }
