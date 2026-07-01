@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Image from "next/image";
 import { bairros, totalAlunos, COLEGIO } from "@/data/bairros";
 import MapaWrapper from "@/components/MapaWrapper";
 
@@ -25,15 +26,17 @@ export default function Home() {
         style={{ background: "#FFFFFF", borderBottom: "1px solid #E5E7EB", zIndex: 30, position: "relative" }}
       >
         <div className="flex items-center gap-3">
-          <div className="w-1 h-8 rounded-full shrink-0" style={{ background: "#ED145B" }} />
-          <div>
-            <h1 className="text-sm md:text-base font-bold tracking-tight text-gray-900">
-              Colégio Módulo
-            </h1>
-            <p className="text-xs text-gray-400 hidden sm:block mt-0.5">
-              Matrículas por bairro · São Paulo
-            </p>
-          </div>
+          <Image
+            src="/logo-modulo.png"
+            alt="Colégio Módulo"
+            width={140}
+            height={40}
+            className="h-8 md:h-10 w-auto"
+            priority
+          />
+          <p className="text-xs text-gray-400 hidden sm:block">
+            Matrículas por bairro · São Paulo
+          </p>
         </div>
 
         <div className="flex items-center gap-3 md:gap-6">
