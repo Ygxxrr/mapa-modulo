@@ -8,15 +8,14 @@ const ALUNOS: Record<string, number> = Object.fromEntries(
 );
 const MAX = Math.max(...bairros.map((b) => b.alunos));
 
-// Escala de roxo da marca: do lavanda suave até o roxo profundo
 function getFillColor(alunos: number): string {
   if (!alunos) return "#E5E7EB";
   const r = alunos / MAX;
-  if (r >= 0.7)  return "#5A008C"; // roxo profundo (marca)
-  if (r >= 0.45) return "#7B1FA2"; // roxo médio-escuro
-  if (r >= 0.25) return "#915EF9"; // roxo (marca)
-  if (r >= 0.12) return "#B39DDB"; // lavanda médio
-  return "#D1C4E9";                 // lavanda claro
+  if (r >= 0.7)  return "#5A008C";
+  if (r >= 0.45) return "#7B1FA2";
+  if (r >= 0.25) return "#915EF9";
+  if (r >= 0.12) return "#B39DDB";
+  return "#D1C4E9";
 }
 
 function getRestOpacity(alunos: number): number {
@@ -86,7 +85,10 @@ export default function MapaCalor() {
           { className: "modulo-popup", maxWidth: 240 }
         );
 
-      // Tooltip dos bairros
+      // Detecta se é touch (celular/tablet)
+      const isTouch = window.matchMedia("(pointer: coarse)").matches;
+
+      // Tooltip para desktop (hover)
       const tooltip = L.tooltip({
         sticky: true,
         opacity: 1,
@@ -123,30 +125,57 @@ export default function MapaCalor() {
           const color = getFillColor(alunos);
           const restOpacity = getRestOpacity(alunos);
 
-          layer.on("mouseover", (e) => {
-            if (alunos) {
-              (layer as L.Path).setStyle({ fillOpacity: 0.52, weight: 2.5, opacity: 1 });
-            }
-            tooltip
-              .setContent(
-                `<div class="tip-nome">${nome}</div>
-                 <div class="tip-count" style="color:${alunos ? color : '#9CA3AF'}">${alunos || "–"}</div>
-                 <div class="tip-label">${alunos ? `aluno${alunos !== 1 ? "s" : ""} matriculado${alunos !== 1 ? "s" : ""}` : "sem dados"}</div>`
-              )
-              .setLatLng(e.latlng)
-              .addTo(map);
-          });
+          const popupContent = `
+            <div class="tip-nome">${nome}</div>
+            <div class="tip-count" style="color:${alunos ? color : "#9CA3AF"}">${alunos || "–"}</div>
+            <div class="tip-label">${
+              alunos
+                ? `aluno${alunos !== 1 ? "s" : ""} matriculado${alunos !== 1 ? "s" : ""}`
+                : "sem dados"
+            }</div>`;
 
-          layer.on("mousemove", (e) => tooltip.setLatLng(e.latlng));
-
-          layer.on("mouseout", () => {
-            (layer as L.Path).setStyle({
-              fillOpacity: restOpacity,
-              weight: alunos ? 2 : 1,
-              opacity: alunos ? 0.85 : 0.35,
+          if (isTouch) {
+            // Mobile: toque abre popup fixo com as informações
+            layer.on("click", (e) => {
+              if (alunos) {
+                (layer as L.Path).setStyle({ fillOpacity: 0.55, weight: 2.5 });
+              }
+              L.popup({ className: "modulo-tooltip modulo-popup-touch", maxWidth: 180, autoPan: true })
+                .setLatLng(e.latlng)
+                .setContent(popupContent)
+                .openOn(map);
             });
-            tooltip.remove();
-          });
+
+            // Volta ao estilo original quando o popup fecha
+            map.on("popupclose", () => {
+              (layer as L.Path).setStyle({
+                fillOpacity: restOpacity,
+                weight: alunos ? 2 : 1,
+              });
+            });
+          } else {
+            // Desktop: hover com tooltip seguindo o mouse
+            layer.on("mouseover", (e) => {
+              if (alunos) {
+                (layer as L.Path).setStyle({ fillOpacity: 0.52, weight: 2.5, opacity: 1 });
+              }
+              tooltip
+                .setContent(popupContent)
+                .setLatLng(e.latlng)
+                .addTo(map);
+            });
+
+            layer.on("mousemove", (e) => tooltip.setLatLng(e.latlng));
+
+            layer.on("mouseout", () => {
+              (layer as L.Path).setStyle({
+                fillOpacity: restOpacity,
+                weight: alunos ? 2 : 1,
+                opacity: alunos ? 0.85 : 0.35,
+              });
+              tooltip.remove();
+            });
+          }
         },
       }).addTo(map);
     });

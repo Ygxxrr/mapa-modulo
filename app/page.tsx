@@ -36,14 +36,27 @@ export default function Home() {
           </div>
         </div>
 
-        <div className="flex items-center gap-4 md:gap-6">
-          <div className="text-right">
-            <p className="text-xl md:text-2xl font-black" style={{ color: "#ED145B" }}>
-              {totalAlunos}
-            </p>
-            <p className="text-xs text-gray-400 uppercase tracking-wider hidden sm:block">
-              alunos
-            </p>
+        <div className="flex items-center gap-3 md:gap-6">
+
+          {/* Mobile: exibe alunos + bairros compacto em linha */}
+          <div className="flex items-center gap-3 md:hidden">
+            <div className="text-right">
+              <p className="text-base font-black leading-none" style={{ color: "#ED145B" }}>
+                {totalAlunos}
+              </p>
+              <p className="text-[10px] text-gray-400 uppercase tracking-wide">alunos</p>
+            </div>
+            <div className="w-px h-6 bg-gray-200" />
+            <div className="text-right">
+              <p className="text-base font-black leading-none text-gray-800">{bairros.length}</p>
+              <p className="text-[10px] text-gray-400 uppercase tracking-wide">bairros</p>
+            </div>
+          </div>
+
+          {/* Desktop: blocos separados */}
+          <div className="text-right hidden md:block">
+            <p className="text-2xl font-black" style={{ color: "#ED145B" }}>{totalAlunos}</p>
+            <p className="text-xs text-gray-400 uppercase tracking-wider">alunos mapeados</p>
           </div>
           <div className="text-right hidden md:block">
             <p className="text-2xl font-black text-gray-800">{bairros.length}</p>
@@ -77,7 +90,7 @@ export default function Home() {
         {sidebarOpen && (
           <div
             className="fixed inset-0 bg-black/30 md:hidden"
-            style={{ zIndex: 40 }}
+            style={{ zIndex: 9998 }}
             onClick={() => setSidebarOpen(false)}
           />
         )}
@@ -87,7 +100,7 @@ export default function Home() {
             Desktop: coluna estática no flex-row */}
         <aside
           style={{
-            zIndex: 50,
+            zIndex: 9999,
             background: "#FFFFFF",
             borderLeft: "1px solid #E5E7EB",
             width: "17rem",
