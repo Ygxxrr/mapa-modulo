@@ -1,3 +1,6 @@
+"use client";
+
+import { useState } from "react";
 import { bairros, totalAlunos, COLEGIO } from "@/data/bairros";
 import MapaWrapper from "@/components/MapaWrapper";
 
@@ -12,55 +15,114 @@ const legenda = [
 ];
 
 export default function Home() {
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+
   return (
     <div className="flex flex-col h-screen text-gray-800" style={{ background: "#F4F5F7" }}>
-      {/* Header */}
+      {/* ── Header ── */}
       <header
-        className="flex items-center justify-between px-6 py-3 shrink-0"
-        style={{ background: "#FFFFFF", borderBottom: "1px solid #E5E7EB" }}
+        className="flex items-center justify-between px-4 md:px-6 py-3 shrink-0"
+        style={{ background: "#FFFFFF", borderBottom: "1px solid #E5E7EB", zIndex: 30, position: "relative" }}
       >
         <div className="flex items-center gap-3">
-          <div className="w-1 h-8 rounded-full" style={{ background: "#ED145B" }} />
+          <div className="w-1 h-8 rounded-full shrink-0" style={{ background: "#ED145B" }} />
           <div>
-            <h1 className="text-base font-bold tracking-tight text-gray-900">
+            <h1 className="text-sm md:text-base font-bold tracking-tight text-gray-900">
               Colégio Módulo
             </h1>
-            <p className="text-xs text-gray-400 mt-0.5">
+            <p className="text-xs text-gray-400 hidden sm:block mt-0.5">
               Matrículas por bairro · São Paulo
             </p>
           </div>
         </div>
-        <div className="flex items-center gap-6">
+
+        <div className="flex items-center gap-4 md:gap-6">
           <div className="text-right">
-            <p className="text-2xl font-black" style={{ color: "#ED145B" }}>
+            <p className="text-xl md:text-2xl font-black" style={{ color: "#ED145B" }}>
               {totalAlunos}
             </p>
-            <p className="text-xs text-gray-400 uppercase tracking-wider">
-              alunos mapeados
+            <p className="text-xs text-gray-400 uppercase tracking-wider hidden sm:block">
+              alunos
             </p>
           </div>
-          <div className="text-right">
+          <div className="text-right hidden md:block">
             <p className="text-2xl font-black text-gray-800">{bairros.length}</p>
             <p className="text-xs text-gray-400 uppercase tracking-wider">bairros</p>
           </div>
+
+          {/* Botão toggle sidebar — visível só no mobile */}
+          <button
+            onClick={() => setSidebarOpen(true)}
+            className="md:hidden flex items-center justify-center w-9 h-9 rounded-lg border border-gray-200 bg-white text-gray-600 active:bg-gray-50"
+            aria-label="Abrir painel"
+          >
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+              <line x1="3" y1="6" x2="21" y2="6"/>
+              <line x1="3" y1="12" x2="21" y2="12"/>
+              <line x1="3" y1="18" x2="21" y2="18"/>
+            </svg>
+          </button>
         </div>
       </header>
 
-      <div className="flex flex-1 overflow-hidden">
-        {/* Mapa */}
+      {/* ── Corpo ── */}
+      <div className="flex flex-1 overflow-hidden relative">
+
+        {/* Mapa — sempre ocupa tudo */}
         <main className="flex-1 relative">
           <MapaWrapper />
         </main>
 
-        {/* Sidebar */}
+        {/* ── Overlay mobile (fecha ao clicar fora) ── */}
+        {sidebarOpen && (
+          <div
+            className="fixed inset-0 bg-black/30 md:hidden"
+            style={{ zIndex: 40 }}
+            onClick={() => setSidebarOpen(false)}
+          />
+        )}
+
+        {/* ── Sidebar ──
+            Mobile: gaveta fixa deslizante (translate-x)
+            Desktop: coluna estática no flex-row */}
         <aside
-          className="w-64 flex flex-col overflow-y-auto shrink-0"
-          style={{ background: "#FFFFFF", borderLeft: "1px solid #E5E7EB" }}
+          style={{
+            zIndex: 50,
+            background: "#FFFFFF",
+            borderLeft: "1px solid #E5E7EB",
+            width: "17rem",
+          }}
+          className={[
+            "fixed top-0 right-0 h-full",   // mobile: fixed sobre o mapa
+            "md:static md:h-full",           // desktop: entra no flow flex
+            "flex flex-col overflow-y-auto shrink-0",
+            "transition-transform duration-300 ease-in-out",
+            sidebarOpen ? "translate-x-0" : "translate-x-full",
+            "md:translate-x-0",
+          ].join(" ")}
         >
+          {/* Botão fechar — só no mobile */}
+          <div
+            className="flex items-center justify-between px-4 py-3 md:hidden shrink-0"
+            style={{ borderBottom: "1px solid #F3F4F6" }}
+          >
+            <span className="text-sm font-semibold text-gray-800">Informações</span>
+            <button
+              onClick={() => setSidebarOpen(false)}
+              className="w-8 h-8 flex items-center justify-center rounded-lg text-gray-400 hover:bg-gray-100"
+              aria-label="Fechar painel"
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                <line x1="18" y1="6" x2="6" y2="18"/>
+                <line x1="6" y1="6" x2="18" y2="18"/>
+              </svg>
+            </button>
+          </div>
+
           {/* Colégio */}
-          <div className="p-4" style={{ borderBottom: "1px solid #F3F4F6", background: "#FFF5F8" }}>
+          <div className="p-4 shrink-0" style={{ borderBottom: "1px solid #F3F4F6", background: "#FFF5F8" }}>
             <div className="flex items-start gap-2">
-              <span className="text-base mt-0.5">🎓</span>
+              <span className="text-base mt-0.5 shrink-0">🎓</span>
               <div>
                 <p className="text-xs font-bold text-gray-800">{COLEGIO.nome}</p>
                 <p className="text-xs text-gray-500 mt-0.5 leading-relaxed">
@@ -71,7 +133,7 @@ export default function Home() {
           </div>
 
           {/* Legenda */}
-          <div className="p-4" style={{ borderBottom: "1px solid #F3F4F6" }}>
+          <div className="p-4 shrink-0" style={{ borderBottom: "1px solid #F3F4F6" }}>
             <h2 className="text-xs font-semibold uppercase tracking-wider text-gray-400 mb-3">
               Legenda
             </h2>
@@ -79,7 +141,7 @@ export default function Home() {
               {legenda.map((l) => (
                 <li key={l.label} className="flex items-center gap-2.5 text-sm text-gray-700">
                   <span
-                    className="w-3.5 h-3.5 rounded-sm shrink-0 border border-white/30"
+                    className="w-3.5 h-3.5 rounded-sm shrink-0"
                     style={{ backgroundColor: l.color }}
                   />
                   {l.label}
@@ -89,7 +151,7 @@ export default function Home() {
           </div>
 
           {/* Top 5 */}
-          <div className="p-4" style={{ borderBottom: "1px solid #F3F4F6" }}>
+          <div className="p-4 shrink-0" style={{ borderBottom: "1px solid #F3F4F6" }}>
             <h2 className="text-xs font-semibold uppercase tracking-wider text-gray-400 mb-3">
               Top 5 bairros
             </h2>
@@ -122,7 +184,6 @@ export default function Home() {
             <h2 className="text-xs font-semibold uppercase tracking-wider text-gray-400 mb-3">
               Todos os bairros
             </h2>
-            {/* Cabeçalho */}
             <div
               className="flex justify-between text-xs font-semibold mb-2 pb-2"
               style={{ color: "#9CA3AF", borderBottom: "1px solid #F3F4F6" }}
@@ -144,9 +205,7 @@ export default function Home() {
                     <span className="truncate mr-2">{b.nome}</span>
                     <div className="flex gap-3 shrink-0">
                       <span className="w-8 text-right font-bold text-gray-800">{b.alunos}</span>
-                      <span className="w-10 text-right text-gray-400">
-                        {b.distKm} km
-                      </span>
+                      <span className="w-10 text-right text-gray-400">{b.distKm} km</span>
                     </div>
                   </li>
                 ))}
@@ -154,6 +213,20 @@ export default function Home() {
           </div>
         </aside>
       </div>
+
+      {/* ── FAB mobile: abre o sidebar ── */}
+      <button
+        onClick={() => setSidebarOpen(true)}
+        className="md:hidden fixed bottom-5 right-5 w-14 h-14 rounded-full shadow-lg flex items-center justify-center"
+        style={{ background: "#ED145B", zIndex: 35 }}
+        aria-label="Ver informações"
+      >
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round">
+          <circle cx="12" cy="12" r="10"/>
+          <line x1="12" y1="8" x2="12" y2="12"/>
+          <line x1="12" y1="16" x2="12.01" y2="16"/>
+        </svg>
+      </button>
     </div>
   );
 }
