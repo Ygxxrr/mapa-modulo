@@ -1,20 +1,23 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import { bairros, maxAlunos } from "@/data/bairros";
+import { bairros } from "@/data/bairros";
+
+const ALUNOS: Record<string, number> = Object.fromEntries(
+  bairros.map((b) => [b.nome, b.alunos])
+);
+
+const MAX = Math.max(...bairros.map((b) => b.alunos));
 
 function getColor(alunos: number): string {
-  const ratio = alunos / maxAlunos;
-  if (ratio >= 0.6) return "#ED145B";
-  if (ratio >= 0.35) return "#C4104A";
-  if (ratio >= 0.2) return "#0099AA";
-  if (ratio >= 0.1) return "#00C4B4";
-  if (ratio >= 0.05) return "#915EF9";
+  if (!alunos) return "#F3F4F6";
+  const r = alunos / MAX;
+  if (r >= 0.6) return "#ED145B";
+  if (r >= 0.35) return "#C4104A";
+  if (r >= 0.2) return "#0099AA";
+  if (r >= 0.1) return "#00C4B4";
+  if (r >= 0.05) return "#915EF9";
   return "#5A008C";
-}
-
-function getRadius(alunos: number): number {
-  return 400 + (alunos / maxAlunos) * 2600;
 }
 
 export default function MapaCalor() {
@@ -24,15 +27,14 @@ export default function MapaCalor() {
   useEffect(() => {
     if (mapInstance.current || !mapRef.current) return;
 
-    import("leaflet").then((L) => {
-      import("leaflet/dist/leaflet.css");
+    import("leaflet").then(async (L) => {
+      await import("leaflet/dist/leaflet.css");
 
       const map = L.map(mapRef.current!, {
-        center: [-23.52, -46.71],
+        center: [-23.52, -46.70],
         zoom: 12,
         zoomControl: true,
       });
-
       mapInstance.current = map;
 
       L.tileLayer(
@@ -44,31 +46,63 @@ export default function MapaCalor() {
         }
       ).addTo(map);
 
-      bairros.forEach((b) => {
-        const color = getColor(b.alunos);
-        const circle = L.circle([b.lat, b.lng], {
-          color: color,
-          weight: 1.5,
-          fillColor: color,
-          fillOpacity: 0.35,
-          radius: getRadius(b.alunos),
-        }).addTo(map);
-
-        circle.bindPopup(
-          `<div style="font-family:sans-serif;min-width:160px">
-            <div style="font-size:12px;font-weight:600;color:#6B7280;margin-bottom:4px">
-              ${b.nome}
-            </div>
-            <div style="font-size:26px;font-weight:800;color:${color};line-height:1">
-              ${b.alunos}
-            </div>
-            <div style="font-size:11px;color:#9CA3AF;margin-top:2px">
-              aluno${b.alunos !== 1 ? "s" : ""} matriculado${b.alunos !== 1 ? "s" : ""}
-            </div>
-          </div>`,
-          { maxWidth: 200, className: "modulo-popup" }
-        );
+      // Tooltip flutuante
+      const tooltip = L.tooltip({
+        sticky: true,
+        opacity: 1,
+        className: "modulo-tooltip",
       });
+
+      // Carregar GeoJSON
+      const resp = await fetch("/sp-bairros.geojson");
+      const geojson = await resp.json();
+
+      L.geoJSON(geojson, {
+        style: (feature) => {
+          const nome = feature?.properties?.name ?? "";
+          const alunos = ALUNOS[nome] ?? 0;
+          const color = getColor(alunos);
+          return {
+            color: alunos ? color : "#D1D5DB",
+            weight: alunos ? 1.5 : 0.8,
+            fillColor: color,
+            fillOpacity: alunos ? 0.55 : 0.15,
+          };
+        },
+        onEachFeature: (feature, layer) => {
+          const nome = feature.properties?.name ?? "";
+          const alunos = ALUNOS[nome] ?? 0;
+          const color = getColor(alunos);
+
+          layer.on("mouseover", (e) => {
+            (layer as L.Path).setStyle({
+              weight: 2.5,
+              fillOpacity: alunos ? 0.75 : 0.3,
+            });
+
+            tooltip
+              .setContent(
+                `<div class="tip-nome">${nome}</div>
+                 <div class="tip-count" style="color:${color}">${alunos}</div>
+                 <div class="tip-label">aluno${alunos !== 1 ? "s" : ""} matriculado${alunos !== 1 ? "s" : ""}</div>`
+              )
+              .setLatLng(e.latlng)
+              .addTo(map);
+          });
+
+          layer.on("mousemove", (e) => {
+            tooltip.setLatLng(e.latlng);
+          });
+
+          layer.on("mouseout", () => {
+            (layer as L.Path).setStyle({
+              weight: alunos ? 1.5 : 0.8,
+              fillOpacity: alunos ? 0.55 : 0.15,
+            });
+            tooltip.remove();
+          });
+        },
+      }).addTo(map);
     });
 
     return () => {

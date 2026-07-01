@@ -46,3 +46,39 @@ body {
 .leaflet-container {
   background: #F4F5F7;
 }
+
+/* Tooltip de hover */
+.modulo-tooltip {
+  background: #FFFFFF !important;
+  border: 1px solid #E5E7EB !important;
+  border-radius: 10px !important;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.12) !important;
+  padding: 10px 14px !important;
+  pointer-events: none;
+}
+
+.modulo-tooltip::before {
+  display: none !important;
+}
+
+.modulo-tooltip .tip-nome {
+  font-size: 12px;
+  font-weight: 600;
+  color: #6B7280;
+  margin-bottom: 4px;
+  font-family: sans-serif;
+}
+
+.modulo-tooltip .tip-count {
+  font-size: 28px;
+  font-weight: 800;
+  line-height: 1;
+  font-family: sans-serif;
+}
+
+.modulo-tooltip .tip-label {
+  font-size: 11px;
+  color: #9CA3AF;
+  margin-top: 2px;
+  font-family: sans-serif;
+}
