@@ -5,12 +5,12 @@ import { bairros, maxAlunos } from "@/data/bairros";
 
 function getColor(alunos: number): string {
   const ratio = alunos / maxAlunos;
-  if (ratio >= 0.6) return "#ED145B"; // magenta módulo
-  if (ratio >= 0.35) return "#C4104A"; // magenta escuro
-  if (ratio >= 0.2) return "#25DBEF";  // ciano
-  if (ratio >= 0.1) return "#00FFD9";  // verde-água
-  if (ratio >= 0.05) return "#915EF9"; // roxo
-  return "#5A008C";                    // roxo profundo
+  if (ratio >= 0.6) return "#ED145B";
+  if (ratio >= 0.35) return "#C4104A";
+  if (ratio >= 0.2) return "#0099AA";
+  if (ratio >= 0.1) return "#00C4B4";
+  if (ratio >= 0.05) return "#915EF9";
+  return "#5A008C";
 }
 
 function getRadius(alunos: number): number {
@@ -36,7 +36,7 @@ export default function MapaCalor() {
       mapInstance.current = map;
 
       L.tileLayer(
-        "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png",
+        "https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png",
         {
           attribution:
             '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> © <a href="https://carto.com/">CARTO</a>',
@@ -50,33 +50,23 @@ export default function MapaCalor() {
           color: color,
           weight: 1.5,
           fillColor: color,
-          fillOpacity: 0.45,
+          fillOpacity: 0.35,
           radius: getRadius(b.alunos),
         }).addTo(map);
 
         circle.bindPopup(
-          `<div style="
-            font-family: sans-serif;
-            min-width: 170px;
-            background: #1A1D20;
-            color: #fff;
-            border-radius: 8px;
-            padding: 4px 2px;
-          ">
-            <div style="font-size:13px;font-weight:600;margin-bottom:6px;color:#DEDEDE">
+          `<div style="font-family:sans-serif;min-width:160px">
+            <div style="font-size:12px;font-weight:600;color:#6B7280;margin-bottom:4px">
               ${b.nome}
             </div>
-            <div style="font-size:28px;font-weight:800;color:${color};line-height:1">
+            <div style="font-size:26px;font-weight:800;color:${color};line-height:1">
               ${b.alunos}
             </div>
-            <div style="font-size:12px;color:#AAAAAA;margin-top:2px">
+            <div style="font-size:11px;color:#9CA3AF;margin-top:2px">
               aluno${b.alunos !== 1 ? "s" : ""} matriculado${b.alunos !== 1 ? "s" : ""}
             </div>
           </div>`,
-          {
-            maxWidth: 220,
-            className: "modulo-popup",
-          }
+          { maxWidth: 200, className: "modulo-popup" }
         );
       });
     });
