@@ -6,18 +6,27 @@ import { bairros } from "@/data/bairros";
 const ALUNOS: Record<string, number> = Object.fromEntries(
   bairros.map((b) => [b.nome, b.alunos])
 );
-
 const MAX = Math.max(...bairros.map((b) => b.alunos));
 
-function getColor(alunos: number): string {
-  if (!alunos) return "#F3F4F6";
+// Escala de magenta (cor da marca) com intensidade crescente
+function getFillColor(alunos: number): string {
+  if (!alunos) return "#D1D5DB";
   const r = alunos / MAX;
-  if (r >= 0.6) return "#ED145B";
-  if (r >= 0.35) return "#C4104A";
-  if (r >= 0.2) return "#0099AA";
-  if (r >= 0.1) return "#00C4B4";
-  if (r >= 0.05) return "#915EF9";
-  return "#5A008C";
+  if (r >= 0.7) return "#ED145B"; // magenta pleno
+  if (r >= 0.45) return "#F24E83"; // magenta médio
+  if (r >= 0.25) return "#F77EAA"; // rosa médio
+  if (r >= 0.12) return "#FAA8C5"; // rosa claro
+  return "#FDD6E5";                 // rosa muito claro
+}
+
+// Opacidade de preenchimento: muito baixa no repouso para não tampar o mapa
+function getRestOpacity(alunos: number): number {
+  if (!alunos) return 0;
+  const r = alunos / MAX;
+  if (r >= 0.7) return 0.18;
+  if (r >= 0.45) return 0.14;
+  if (r >= 0.25) return 0.11;
+  return 0.08;
 }
 
 export default function MapaCalor() {
@@ -46,58 +55,68 @@ export default function MapaCalor() {
         }
       ).addTo(map);
 
-      // Tooltip flutuante
       const tooltip = L.tooltip({
         sticky: true,
         opacity: 1,
         className: "modulo-tooltip",
+        offset: [14, 0],
       });
 
-      // Carregar GeoJSON
       const resp = await fetch("/sp-bairros.geojson");
       const geojson = await resp.json();
 
-      L.geoJSON(geojson, {
+      // Filtrar apenas polígonos reais do OSM (sem os retângulos aproximados)
+      const geojsonFiltrado = {
+        ...geojson,
+        features: geojson.features.filter(
+          (f: { properties?: { aprox?: boolean } }) => !f.properties?.aprox
+        ),
+      };
+
+      L.geoJSON(geojsonFiltrado, {
         style: (feature) => {
           const nome = feature?.properties?.name ?? "";
           const alunos = ALUNOS[nome] ?? 0;
-          const color = getColor(alunos);
+          const color = getFillColor(alunos);
           return {
             color: alunos ? color : "#D1D5DB",
-            weight: alunos ? 1.5 : 0.8,
+            weight: alunos ? 2 : 1,
             fillColor: color,
-            fillOpacity: alunos ? 0.55 : 0.15,
+            fillOpacity: getRestOpacity(alunos),
+            opacity: alunos ? 0.8 : 0.4,
           };
         },
         onEachFeature: (feature, layer) => {
           const nome = feature.properties?.name ?? "";
           const alunos = ALUNOS[nome] ?? 0;
-          const color = getColor(alunos);
+          const color = getFillColor(alunos);
+          const restOpacity = getRestOpacity(alunos);
 
           layer.on("mouseover", (e) => {
-            (layer as L.Path).setStyle({
-              weight: 2.5,
-              fillOpacity: alunos ? 0.75 : 0.3,
-            });
-
+            if (alunos) {
+              (layer as L.Path).setStyle({
+                fillOpacity: 0.55,
+                weight: 2.5,
+                opacity: 1,
+              });
+            }
             tooltip
               .setContent(
                 `<div class="tip-nome">${nome}</div>
-                 <div class="tip-count" style="color:${color}">${alunos}</div>
-                 <div class="tip-label">aluno${alunos !== 1 ? "s" : ""} matriculado${alunos !== 1 ? "s" : ""}</div>`
+                 <div class="tip-count" style="color:${alunos ? color : "#9CA3AF"}">${alunos || "–"}</div>
+                 <div class="tip-label">${alunos ? `aluno${alunos !== 1 ? "s" : ""} matriculado${alunos !== 1 ? "s" : ""}` : "sem dados"}</div>`
               )
               .setLatLng(e.latlng)
               .addTo(map);
           });
 
-          layer.on("mousemove", (e) => {
-            tooltip.setLatLng(e.latlng);
-          });
+          layer.on("mousemove", (e) => tooltip.setLatLng(e.latlng));
 
           layer.on("mouseout", () => {
             (layer as L.Path).setStyle({
-              weight: alunos ? 1.5 : 0.8,
-              fillOpacity: alunos ? 0.55 : 0.15,
+              fillOpacity: restOpacity,
+              weight: alunos ? 2 : 1,
+              opacity: alunos ? 0.8 : 0.4,
             });
             tooltip.remove();
           });

@@ -4,12 +4,11 @@ import MapaWrapper from "@/components/MapaWrapper";
 const top5 = [...bairros].sort((a, b) => b.alunos - a.alunos).slice(0, 5);
 
 const legenda = [
-  { label: "1 aluno",       color: "#5A008C" },
-  { label: "2–3 alunos",    color: "#915EF9" },
-  { label: "4–6 alunos",    color: "#00C4B4" },
-  { label: "7–12 alunos",   color: "#0099AA" },
-  { label: "13–19 alunos",  color: "#C4104A" },
-  { label: "20+ alunos",    color: "#ED145B" },
+  { label: "1–3 alunos",   color: "#FDD6E5" },
+  { label: "4–8 alunos",   color: "#FAA8C5" },
+  { label: "9–14 alunos",  color: "#F77EAA" },
+  { label: "15–19 alunos", color: "#F24E83" },
+  { label: "20+ alunos",   color: "#ED145B" },
 ];
 
 export default function Home() {
