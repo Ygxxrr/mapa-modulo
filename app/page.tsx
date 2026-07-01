@@ -1,14 +1,14 @@
-import { bairros, totalAlunos } from "@/data/bairros";
+import { bairros, totalAlunos, COLEGIO } from "@/data/bairros";
 import MapaWrapper from "@/components/MapaWrapper";
 
 const top5 = [...bairros].sort((a, b) => b.alunos - a.alunos).slice(0, 5);
 
 const legenda = [
-  { label: "1–3 alunos",   color: "#FDD6E5" },
-  { label: "4–8 alunos",   color: "#FAA8C5" },
-  { label: "9–14 alunos",  color: "#F77EAA" },
-  { label: "15–19 alunos", color: "#F24E83" },
-  { label: "20+ alunos",   color: "#ED145B" },
+  { label: "1–3 alunos",   color: "#D1C4E9" },
+  { label: "4–8 alunos",   color: "#B39DDB" },
+  { label: "9–14 alunos",  color: "#915EF9" },
+  { label: "15–19 alunos", color: "#7B1FA2" },
+  { label: "20+ alunos",   color: "#5A008C" },
 ];
 
 export default function Home() {
@@ -40,12 +40,8 @@ export default function Home() {
             </p>
           </div>
           <div className="text-right">
-            <p className="text-2xl font-black text-gray-800">
-              {bairros.length}
-            </p>
-            <p className="text-xs text-gray-400 uppercase tracking-wider">
-              bairros
-            </p>
+            <p className="text-2xl font-black text-gray-800">{bairros.length}</p>
+            <p className="text-xs text-gray-400 uppercase tracking-wider">bairros</p>
           </div>
         </div>
       </header>
@@ -58,9 +54,22 @@ export default function Home() {
 
         {/* Sidebar */}
         <aside
-          className="w-60 flex flex-col overflow-y-auto shrink-0"
+          className="w-64 flex flex-col overflow-y-auto shrink-0"
           style={{ background: "#FFFFFF", borderLeft: "1px solid #E5E7EB" }}
         >
+          {/* Colégio */}
+          <div className="p-4" style={{ borderBottom: "1px solid #F3F4F6", background: "#FFF5F8" }}>
+            <div className="flex items-start gap-2">
+              <span className="text-base mt-0.5">🎓</span>
+              <div>
+                <p className="text-xs font-bold text-gray-800">{COLEGIO.nome}</p>
+                <p className="text-xs text-gray-500 mt-0.5 leading-relaxed">
+                  {COLEGIO.endereco}
+                </p>
+              </div>
+            </div>
+          </div>
+
           {/* Legenda */}
           <div className="p-4" style={{ borderBottom: "1px solid #F3F4F6" }}>
             <h2 className="text-xs font-semibold uppercase tracking-wider text-gray-400 mb-3">
@@ -70,16 +79,13 @@ export default function Home() {
               {legenda.map((l) => (
                 <li key={l.label} className="flex items-center gap-2.5 text-sm text-gray-700">
                   <span
-                    className="w-3.5 h-3.5 rounded-full shrink-0"
+                    className="w-3.5 h-3.5 rounded-sm shrink-0 border border-white/30"
                     style={{ backgroundColor: l.color }}
                   />
                   {l.label}
                 </li>
               ))}
             </ul>
-            <p className="text-xs text-gray-400 mt-3">
-              Tamanho proporcional ao número de alunos.
-            </p>
           </div>
 
           {/* Top 5 */}
@@ -90,24 +96,20 @@ export default function Home() {
             <ol className="space-y-3">
               {top5.map((b, i) => (
                 <li key={b.nome} className="flex items-center gap-3">
-                  <span className="text-xs font-black text-gray-300 w-4 shrink-0">
-                    {i + 1}
-                  </span>
+                  <span className="text-xs font-black text-gray-300 w-4 shrink-0">{i + 1}</span>
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-gray-800 truncate">
-                      {b.nome}
-                    </p>
+                    <p className="text-sm font-medium text-gray-800 truncate">{b.nome}</p>
                     <div className="mt-1 h-1 rounded-full bg-gray-100">
                       <div
                         className="h-1 rounded-full"
                         style={{
                           width: `${(b.alunos / top5[0].alunos) * 100}%`,
-                          background: "#ED145B",
+                          background: "#915EF9",
                         }}
                       />
                     </div>
                   </div>
-                  <span className="text-sm font-black shrink-0" style={{ color: "#ED145B" }}>
+                  <span className="text-sm font-black shrink-0" style={{ color: "#915EF9" }}>
                     {b.alunos}
                   </span>
                 </li>
@@ -115,11 +117,22 @@ export default function Home() {
             </ol>
           </div>
 
-          {/* Lista completa */}
+          {/* Lista completa com distância */}
           <div className="p-4">
             <h2 className="text-xs font-semibold uppercase tracking-wider text-gray-400 mb-3">
-              Todos os bairros ({bairros.length})
+              Todos os bairros
             </h2>
+            {/* Cabeçalho */}
+            <div
+              className="flex justify-between text-xs font-semibold mb-2 pb-2"
+              style={{ color: "#9CA3AF", borderBottom: "1px solid #F3F4F6" }}
+            >
+              <span>Bairro</span>
+              <div className="flex gap-3 shrink-0">
+                <span className="w-8 text-right">Alunos</span>
+                <span className="w-10 text-right">Dist.</span>
+              </div>
+            </div>
             <ul className="space-y-1.5">
               {[...bairros]
                 .sort((a, b) => b.alunos - a.alunos)
@@ -129,7 +142,12 @@ export default function Home() {
                     className="flex justify-between items-center text-xs text-gray-500"
                   >
                     <span className="truncate mr-2">{b.nome}</span>
-                    <span className="font-bold text-gray-800 shrink-0">{b.alunos}</span>
+                    <div className="flex gap-3 shrink-0">
+                      <span className="w-8 text-right font-bold text-gray-800">{b.alunos}</span>
+                      <span className="w-10 text-right text-gray-400">
+                        {b.distKm} km
+                      </span>
+                    </div>
                   </li>
                 ))}
             </ul>

@@ -1,33 +1,45 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import { bairros } from "@/data/bairros";
+import { bairros, COLEGIO } from "@/data/bairros";
 
 const ALUNOS: Record<string, number> = Object.fromEntries(
   bairros.map((b) => [b.nome, b.alunos])
 );
 const MAX = Math.max(...bairros.map((b) => b.alunos));
 
-// Escala de magenta (cor da marca) com intensidade crescente
+// Escala de roxo da marca: do lavanda suave até o roxo profundo
 function getFillColor(alunos: number): string {
-  if (!alunos) return "#D1D5DB";
+  if (!alunos) return "#E5E7EB";
   const r = alunos / MAX;
-  if (r >= 0.7) return "#ED145B"; // magenta pleno
-  if (r >= 0.45) return "#F24E83"; // magenta médio
-  if (r >= 0.25) return "#F77EAA"; // rosa médio
-  if (r >= 0.12) return "#FAA8C5"; // rosa claro
-  return "#FDD6E5";                 // rosa muito claro
+  if (r >= 0.7)  return "#5A008C"; // roxo profundo (marca)
+  if (r >= 0.45) return "#7B1FA2"; // roxo médio-escuro
+  if (r >= 0.25) return "#915EF9"; // roxo (marca)
+  if (r >= 0.12) return "#B39DDB"; // lavanda médio
+  return "#D1C4E9";                 // lavanda claro
 }
 
-// Opacidade de preenchimento: muito baixa no repouso para não tampar o mapa
 function getRestOpacity(alunos: number): number {
   if (!alunos) return 0;
   const r = alunos / MAX;
-  if (r >= 0.7) return 0.18;
-  if (r >= 0.45) return 0.14;
-  if (r >= 0.25) return 0.11;
-  return 0.08;
+  if (r >= 0.7)  return 0.22;
+  if (r >= 0.45) return 0.18;
+  if (r >= 0.25) return 0.14;
+  return 0.10;
 }
+
+const SCHOOL_ICON_HTML = `
+  <div style="
+    width:36px;height:36px;
+    background:#ED145B;
+    border:3px solid #fff;
+    border-radius:50% 50% 50% 0;
+    transform:rotate(-45deg);
+    box-shadow:0 2px 8px rgba(0,0,0,0.25);
+    display:flex;align-items:center;justify-content:center;
+  ">
+    <span style="transform:rotate(45deg);font-size:16px;line-height:1;">🎓</span>
+  </div>`;
 
 export default function MapaCalor() {
   const mapRef = useRef<HTMLDivElement>(null);
@@ -55,6 +67,26 @@ export default function MapaCalor() {
         }
       ).addTo(map);
 
+      // Marcador do Colégio Módulo
+      const schoolIcon = L.divIcon({
+        html: SCHOOL_ICON_HTML,
+        iconSize: [36, 36],
+        iconAnchor: [0, 36],
+        popupAnchor: [18, -36],
+        className: "",
+      });
+
+      L.marker([COLEGIO.lat, COLEGIO.lng], { icon: schoolIcon })
+        .addTo(map)
+        .bindPopup(
+          `<div class="school-popup">
+            <div class="sp-label">📍 Colégio Módulo</div>
+            <div class="sp-addr">${COLEGIO.endereco}</div>
+          </div>`,
+          { className: "modulo-popup", maxWidth: 240 }
+        );
+
+      // Tooltip dos bairros
       const tooltip = L.tooltip({
         sticky: true,
         opacity: 1,
@@ -65,15 +97,14 @@ export default function MapaCalor() {
       const resp = await fetch("/sp-bairros.geojson");
       const geojson = await resp.json();
 
-      // Filtrar apenas polígonos reais do OSM (sem os retângulos aproximados)
-      const geojsonFiltrado = {
+      const filtered = {
         ...geojson,
         features: geojson.features.filter(
           (f: { properties?: { aprox?: boolean } }) => !f.properties?.aprox
         ),
       };
 
-      L.geoJSON(geojsonFiltrado, {
+      L.geoJSON(filtered, {
         style: (feature) => {
           const nome = feature?.properties?.name ?? "";
           const alunos = ALUNOS[nome] ?? 0;
@@ -83,7 +114,7 @@ export default function MapaCalor() {
             weight: alunos ? 2 : 1,
             fillColor: color,
             fillOpacity: getRestOpacity(alunos),
-            opacity: alunos ? 0.8 : 0.4,
+            opacity: alunos ? 0.85 : 0.35,
           };
         },
         onEachFeature: (feature, layer) => {
@@ -94,16 +125,12 @@ export default function MapaCalor() {
 
           layer.on("mouseover", (e) => {
             if (alunos) {
-              (layer as L.Path).setStyle({
-                fillOpacity: 0.55,
-                weight: 2.5,
-                opacity: 1,
-              });
+              (layer as L.Path).setStyle({ fillOpacity: 0.52, weight: 2.5, opacity: 1 });
             }
             tooltip
               .setContent(
                 `<div class="tip-nome">${nome}</div>
-                 <div class="tip-count" style="color:${alunos ? color : "#9CA3AF"}">${alunos || "–"}</div>
+                 <div class="tip-count" style="color:${alunos ? color : '#9CA3AF'}">${alunos || "–"}</div>
                  <div class="tip-label">${alunos ? `aluno${alunos !== 1 ? "s" : ""} matriculado${alunos !== 1 ? "s" : ""}` : "sem dados"}</div>`
               )
               .setLatLng(e.latlng)
@@ -116,7 +143,7 @@ export default function MapaCalor() {
             (layer as L.Path).setStyle({
               fillOpacity: restOpacity,
               weight: alunos ? 2 : 1,
-              opacity: alunos ? 0.8 : 0.4,
+              opacity: alunos ? 0.85 : 0.35,
             });
             tooltip.remove();
           });
